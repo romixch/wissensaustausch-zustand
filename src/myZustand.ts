@@ -28,6 +28,17 @@ export default create<State>()(
         })
       },
     }),
-    { name: 'my-zustand', getStorage: () => localStorage }
+    {
+      name: 'my-zustand',
+      getStorage: () => localStorage,
+      deserialize: (str) => {
+        const json = JSON.parse(str)
+        console.log(json)
+        return {
+          state: { ...json.state, date: new Date(json.state.date) },
+          version: json.version,
+        }
+      },
+    }
   )
 )
