@@ -1,46 +1,56 @@
-# Getting Started with Create React App
+# Zustand Deep-Dive / Learnings
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Diese drei Dinge musst du kennen, wenn du [Zustand](https://github.com/pmndrs/zustand) erfolgreich einsetzen willst.
 
-## Available Scripts
+In einem produktiven Projekt haben wir kürzlich Zustand eingesetzt. Ich finde, es hat sich absolut gelohnt und werde es gerne wieder tun. Ich bin aber über drei Dinge gestolpert, die ich gerne vorher gewusst hätte.
 
-In the project directory, you can run:
+Zur Demonstration habe ich einige Commits gemacht, die du per Git Tags erreichen kannst.
 
-### `npm start`
+## Rerendering
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Die folgende Art, einen Counter aus dem Zustand zuzuweisen sieht erst mal gut aus. Schliesslich ähnelt es der Verwendung von `useState`:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```
+const {counter} = myZustand()
+```
 
-### `npm test`
+Problematisch ist aber, dass damit viel zu oft gerendert wird. React hat erst mit folgender Zuweisung die Chance, eine Komponente nur dann zu rendern, wenn sie sich geändert hat. Ansonsten wird bei jeder Änderung des Zustands ein rerendering fällig.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```
+const counter = myZustand(state => state.counter)
+```
 
-### `npm run build`
+## Persistieren
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Zustand kann ganz einfach Daten in den `LocalStorage` persistieren.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+{ name: 'my-zustand', getStorage: () => localStorage }
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Das funktioniert für Objekte, die aus `String` und `Number` bestehen auch wunderbar. Wenn du aber ein `Date` persistieren willst, gibt es Probleme.
 
-### `npm run eject`
+```
+{
+  name: 'my-zustand',
+  getStorage: () => localStorage,
+  deserialize: (str) => {
+    const json = JSON.parse(str)
+    console.log(json)
+    return {
+      state: { ...json.state, date: new Date(json.state.date) },
+      version: json.version,
+    }
+  },
+}
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Migration
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Nun ist der Zustand im `LocalStorage` und wird das auch beim nächsten Besuch der App bleiben. Auch wenn die App inzwischen ganz anders aussieht und von einem ganz anderen Zustand ausgeht. Dafür gibt es die **Version** und die **Migration**. Du hast zwei Möglichkeiten:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+1. Wenn du eine nicht kompatible Änderung machst, kannst du die **Version** des Zustands erhöhen. Der Zustand wird dann einfach weggeworfen, wenn die Version der App nicht mit der Version des `LocalStorage` übereinstimmt.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+2. Du kannst nebst der Version noch einen **Migrations-Schritt** implementieren, der die Daten vom `LocalStorage` nimmt und in ein kompatibles Schema überführt.
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Mehr dazu findest du auf der [Dokumentation von Zustand](https://github.com/pmndrs/zustand/blob/main/docs/integrations/persisting-store-data.md#version).
