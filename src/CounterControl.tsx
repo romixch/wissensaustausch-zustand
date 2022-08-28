@@ -3,7 +3,8 @@ import styles from './CounterControl.module.css'
 
 export const CounterControl = () => {
   console.log('Rendering CounterControl')
-  const { countUp, countDown } = myZustand()
+  const countUp = myZustand((state) => state.countUp)
+  const countDown = myZustand((state) => state.countDown)
   return (
     <div className={styles.counterControl}>
       <h1>Counter Control</h1>

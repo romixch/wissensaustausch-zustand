@@ -3,7 +3,7 @@ import myZustand from './myZustand'
 
 export const FormattedDate = () => {
   console.log('Rendering FormattedDate')
-  const { date } = myZustand()
+  const date = myZustand((state) => state.date)
   const formatted = date.toLocaleDateString()
   return (
     <div className={styles.formattedDate}>

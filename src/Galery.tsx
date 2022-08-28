@@ -3,7 +3,8 @@ import myZustand from './myZustand'
 
 export const Galery = () => {
   console.log('Rendering Galery')
-  const { galeryImageName, nextImage } = myZustand()
+  const galeryImageName = myZustand((state) => state.galeryImageName)
+  const nextImage = myZustand((state) => state.nextImage)
   return (
     <div className={styles.galery}>
       <img
